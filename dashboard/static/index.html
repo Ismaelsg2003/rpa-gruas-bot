@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centro de control · Grúas (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E9EAE4; --paper: #FFFFFF; --ink: #1C1F22; --muted: #5F666D; --line: #D3D5CE;
+    --asphalt: #24282C; --asphalt-ink: #F1F2EE; --hivis: #F5B800; --hivis-ink: #1C1F22;
+    --go: #23824F; --go-soft: #E2F2E8; --stop: #C2362B; --stop-soft: #F8E3E0;
+    --wait: #B7791F; --wait-soft: #FBF0D9; --cfg: #3C6E9E; --cfg-soft: #E3ECF5;
+    --track: #DADCD5; --radius: 6px;
+    --sans: "Barlow", system-ui, "Segoe UI", sans-serif;
+    --cond: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15181B; --paper: #1E2226; --ink: #E8E9E4; --muted: #A0A6AC; --line: #32373C;
+      --asphalt: #0F1113; --track: #2E3338;
+      --go-soft: #173325; --stop-soft: #3A1E1B; --wait-soft: #3A2E15; --cfg-soft: #1B2A3A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15181B; --paper: #1E2226; --ink: #E8E9E4; --muted: #A0A6AC; --line: #32373C;
+    --asphalt: #0F1113; --track: #2E3338;
+    --go-soft: #173325; --stop-soft: #3A1E1B; --wait-soft: #3A2E15; --cfg-soft: #1B2A3A;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--hivis); outline-offset: 2px; }
+
+  /* ---------- Header ---------- */
+  .top { background: var(--asphalt); color: var(--asphalt-ink); border-bottom: 6px solid var(--hivis);
+         background-image: repeating-linear-gradient(-45deg, transparent 0 14px, rgba(255,255,255,.025) 14px 28px); }
+  .top-inner { max-width: 1320px; margin: 0 auto; padding: 18px 20px 20px; display: grid; gap: 18px; }
+  .brand { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand h1 { margin: 0; font: 700 28px/1 var(--cond); letter-spacing: .01em; }
+  .brand h1 small { font: 500 15px var(--sans); color: #B9BEC2; margin-left: 10px; letter-spacing: 0; }
+  .botctl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .botstate { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #7A8086; flex: none; }
+  .dot.on { background: #3DDC84; box-shadow: 0 0 0 0 rgba(61,220,132,.6); animation: ping 2s infinite; }
+  .dot.paused { background: var(--hivis); }
+  .dot.off { background: var(--stop); }
+  @keyframes ping { 70% { box-shadow: 0 0 0 9px rgba(61,220,132,0); } 100% { box-shadow: 0 0 0 0 rgba(61,220,132,0); } }
+  .btn { border: 0; border-radius: var(--radius); padding: 8px 14px; font-weight: 600; cursor: pointer; }
+  .btn-hivis { background: var(--hivis); color: var(--hivis-ink); }
+  .btn-ghost { background: transparent; border: 1px solid var(--line); }
+  .btn-danger { background: transparent; color: var(--stop); border: 1px solid transparent; padding: 6px 8px; }
+  .btn-danger:hover { border-color: var(--stop); }
+
+  /* Scoreboard */
+  .board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid #41474D; border-radius: var(--radius); overflow: hidden; }
+  .board div { padding: 10px 14px; border-left: 1px solid #41474D; }
+  .board div:first-child { border-left: 0; }
+  .board b { display: block; font: 700 34px/1.05 var(--cond); font-variant-numeric: tabular-nums; }
+  .board span { color: #B9BEC2; font-size: 13px; }
+  .board .hl b { color: var(--hivis); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1320px; margin: 0 auto; padding: 22px 20px 48px; display: grid; gap: 22px;
+         grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); align-items: start; }
+  section { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+  section > header { padding: 14px 18px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  h2 { margin: 0; font: 700 21px/1.1 var(--cond); }
+  .hint { color: var(--muted); font-size: 13px; margin: 0; }
+  #rules-sec, #services-sec { grid-column: 1 / -1; }
+  .svc-wrap { overflow-x: auto; max-height: 460px; overflow-y: auto; border-top: 1px solid var(--line); }
+  .svc { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .svc th { position: sticky; top: 0; background: var(--paper); text-align: left; font-weight: 600; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .svc td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .svc td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .svc .why { color: var(--muted); min-width: 260px; }
+  .res { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .res.accepted { background: var(--go-soft); color: var(--go); }
+  .res.rejected { background: var(--track); color: var(--ink); }
+  .res.waiting, .res.new { background: var(--wait-soft); color: var(--wait); }
+  .res.lost, .res.failed { background: var(--stop-soft); color: var(--stop); }
+
+  /* ---------- Fleet tracks ---------- */
+  .unit { display: grid; grid-template-columns: 150px minmax(0, 1fr) 170px; gap: 16px; align-items: center;
+          padding: 14px 18px; border-top: 1px solid var(--line); }
+  .unit .id b { font: 700 24px/1 var(--cond); }
+  .unit .id span { display: block; color: var(--muted); font-size: 13px; }
+  .road { position: relative; height: 40px; margin: 0 17px; }
+  .road .bar { position: absolute; left: 0; right: 0; top: 17px; height: 6px; border-radius: 3px; background: var(--track); }
+  .road .fill { position: absolute; left: 0; top: 17px; height: 6px; border-radius: 3px; background: var(--hivis); transition: width 1.4s linear; }
+  .road .truck { position: absolute; top: 4px; width: 34px; height: 22px; margin-left: -17px; transition: left 1.4s linear; color: var(--ink); }
+  .road .ends { position: absolute; left: 0; right: 0; top: 26px; display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .unit.working-svc .truck { animation: bob 1s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-2px); } }
+  .unit.off .road .bar { background: repeating-linear-gradient(-45deg, var(--track) 0 6px, transparent 6px 12px); }
+  .status b { display: block; font-weight: 600; }
+  .status span { color: var(--muted); font-size: 13px; display: block; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .tag.t-free { background: var(--go-soft); color: var(--go); }
+  .tag.t-road { background: var(--wait-soft); color: var(--wait); }
+  .tag.t-svc { background: var(--cfg-soft); color: var(--cfg); }
+  .tag.t-off { background: var(--stop-soft); color: var(--stop); }
+  .queue { margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); font-size: 13px; }
+  .queue b { font-weight: 600; display: inline; }
+  .tag.t-queue { background: var(--wait-soft); color: var(--wait); }
+  .qwait { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 18px 14px; border-top: 1px solid var(--line); }
+  .qwait label { font-weight: 600; }
+  .qwait input { width: 90px; padding: 6px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+  .qwait p { margin: 0; flex-basis: 100%; }
+  .unit-toggle { background: none; border: 0; padding: 0; color: var(--muted); font-size: 12px; text-decoration: underline; cursor: pointer; margin-top: 4px; }
+
+  /* ---------- Feed ---------- */
+  #feed { list-style: none; margin: 0; padding: 0 0 6px; max-height: 640px; overflow-y: auto; }
+  #feed li { padding: 10px 18px 10px 15px; border-top: 1px solid var(--line); border-left: 3px solid transparent; }
+  #feed li.accepted { border-left-color: var(--go); }
+  #feed li.rejected { border-left-color: var(--track); }
+  #feed li.waiting { border-left-color: var(--wait); }
+  #feed li.lost, #feed li.failed, #feed li.error { border-left-color: var(--stop); }
+  #feed li.config { border-left-color: var(--cfg); }
+  #feed li.fresh { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: var(--wait-soft); } to { background: transparent; } }
+  .ev-top { display: flex; justify-content: space-between; gap: 10px; }
+  .ev-top b { font-weight: 600; }
+  .ev-time { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ev-sub { color: var(--muted); font-size: 13px; }
+
+  /* ---------- Rules ---------- */
+  .rule { display: grid; grid-template-columns: 52px minmax(160px, 1fr) minmax(0, 2.2fr) auto; gap: 14px; align-items: center;
+          padding: 12px 18px; border-top: 1px solid var(--line); }
+  .rule.inactive .sentence, .rule.inactive .rname { opacity: .5; }
+  .rname { font-weight: 600; }
+  .sentence { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); }
+  .sentence input { min-width: 0; flex: 1 1 200px; padding: 6px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+  .switch { position: relative; width: 44px; height: 24px; border-radius: 12px; border: 0; background: var(--track); cursor: pointer; padding: 0; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--paper); transition: transform .2s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .switch[aria-checked="true"] { background: var(--go); }
+  .switch[aria-checked="true"]::after { transform: translateX(20px); }
+  .newrule { display: grid; grid-template-columns: 1.2fr 1fr 1fr 1.6fr auto; gap: 10px; padding: 14px 18px 18px; border-top: 1px solid var(--line); }
+  .newrule input, .newrule select { padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); min-width: 0; }
+  .msg { padding: 0 18px 14px; font-size: 14px; min-height: 1em; }
+  .msg.err { color: var(--stop); } .msg.ok { color: var(--go); }
+  .empty { padding: 18px; color: var(--muted); border-top: 1px solid var(--line); }
+
+  @media (max-width: 1000px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+    .board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .board div:nth-child(4) { border-left: 0; }
+    .board div:nth-child(n+4) { border-top: 1px solid #41474D; }
+  }
+  @media (max-width: 680px) {
+    main, .top-inner { padding-left: 16px; padding-right: 16px; }
+    .unit { grid-template-columns: 1fr; gap: 8px; }
+    .rule { grid-template-columns: 52px 1fr; }
+    .rule .sentence, .rule .ract { grid-column: 1 / -1; }
+    .newrule { grid-template-columns: 1fr; }
+    .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .board div { border-left: 0 !important; border-top: 1px solid #41474D; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <h1>Grúas Demo<small>Centro de control del bot RPA · datos ficticios</small></h1>
+      <div class="botctl">
+        <div class="botstate" role="status" aria-live="polite"><span class="dot" id="bot-dot"></span><span id="bot-text">Conectando…</span></div>
+        <button class="btn btn-hivis" id="pause-btn" hidden>Pausar bot</button>
+      </div>
+    </div>
+    <div class="board" aria-label="Resumen de hoy">
+      <div class="hl"><b id="k-accepted">0</b><span>servicios aceptados hoy</span></div>
+      <div><b id="k-revenue">0 €</b><span>facturación aceptada</span></div>
+      <div class="hl"><b id="k-response">–</b><span>respuesta media del bot</span></div>
+      <div><b id="k-rejected">0</b><span>descartados por tus reglas</span></div>
+      <div><b id="k-lost">0</b><span>perdidos por flota saturada</span></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section aria-labelledby="fleet-h">
+    <header><h2 id="fleet-h">Flota</h2><p class="hint" id="fleet-hint"></p></header>
+    <div id="fleet"></div>
+  </section>
+
+  <section aria-labelledby="feed-h">
+    <header><h2 id="feed-h">Actividad del bot</h2><p class="hint">En directo</p></header>
+    <ul id="feed"></ul>
+  </section>
+
+  <section id="services-sec" aria-labelledby="services-h">
+    <header><h2 id="services-h">Servicios de hoy</h2><p class="hint">Lo que el bot hizo con cada servicio que vio en la plataforma. En la plataforma, todo lo que no aceptas aparece como «Perdido · Otra empresa».</p></header>
+    <div class="svc-wrap"><table class="svc">
+      <thead><tr><th>Expediente</th><th>Servicio</th><th>Zona</th><th>Km</th><th>Importe</th><th>Aseguradora</th><th>Resultado</th><th>Detalle</th></tr></thead>
+      <tbody id="services"></tbody>
+    </table></div>
+  </section>
+
+  <section id="rules-sec" aria-labelledby="rules-h">
+    <header><h2 id="rules-h">Reglas de aceptación</h2><p class="hint">El bot solo acepta servicios que cumplen todas las reglas activas. Los cambios se aplican en el siguiente ciclo.</p></header>
+    <form class="qwait" id="qwait">
+      <label for="qwait-s">Espera máxima en cola</label>
+      <input id="qwait-s" name="seconds" type="number" min="0" max="3600" step="5" required> <span>segundos</span>
+      <button class="btn btn-ghost" type="submit">Guardar</button>
+      <p class="hint">Si todas las grúas adecuadas están ocupadas, el bot acepta el servicio y lo pone en cola de la que antes quede libre, siempre que la espera no supere este tiempo.</p>
+    </form>
+    <div id="rules"></div>
+    <form class="newrule" id="newrule">
+      <input name="name" placeholder="Nombre de la regla" required maxlength="60" aria-label="Nombre de la regla">
+      <select name="field" aria-label="Campo"></select>
+      <select name="operator" aria-label="Condición"></select>
+      <input name="value" placeholder="Valor (lista separada por comas)" required aria-label="Valor">
+      <button class="btn btn-hivis" type="submit">Añadir regla</button>
+    </form>
+    <div class="msg" id="rules-msg" role="status"></div>
+  </section>
+</main>
+
+<script>
+const TRUCK = `<svg viewBox="0 0 34 22" width="34" height="22" aria-hidden="true">
+  <path d="M2 6h17v10H2z" fill="var(--hivis)" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M19 9h7l4 4v3H19z" fill="var(--paper)" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M4 6 L13 1" stroke="currentColor" stroke-width="1.6" fill="none"/>
+  <circle cx="8" cy="17" r="3" fill="currentColor"/><circle cx="25" cy="17" r="3" fill="currentColor"/></svg>`;
+const eur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const eur2 = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const hhmmss = t => new Date(t * 1000).toLocaleTimeString("es-ES");
+let state = null, lastEventId = 0, rulesSig = "";
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || "No se pudo guardar el cambio");
+  return data;
+}
+
+function renderBot(bot) {
+  const dot = document.getElementById("bot-dot"), text = document.getElementById("bot-text"), btn = document.getElementById("pause-btn");
+  dot.className = "dot " + (!bot.online ? "off" : bot.paused ? "paused" : "on");
+  text.textContent = !bot.online ? "Bot desconectado" : bot.paused ? "Bot en pausa: no acepta servicios" : "Bot activo, vigilando la plataforma";
+  btn.hidden = false;
+  btn.textContent = bot.paused ? "Reanudar bot" : "Pausar bot";
+}
+
+function renderStats(s) {
+  document.getElementById("k-accepted").textContent = s.accepted;
+  document.getElementById("k-revenue").textContent = eur.format(s.revenue);
+  document.getElementById("k-response").textContent = s.avg_response ? s.avg_response.toFixed(1).replace(".", ",") + " s" : "–";
+  document.getElementById("k-rejected").textContent = s.rejected;
+  document.getElementById("k-lost").textContent = s.lost;
+}
+
+function queueHtml(u) {
+  const q = u.job ? u.queue : u.queue.slice(1);
+  if (!q.length) return "";
+  return `<div class="queue"><b>${q.length} en cola</b>${q.map(j => `<span>${esc(j.case_number)} · ${esc(j.service_type)} ${esc(j.zone)}, sale en ${j.starts_in} s</span>`).join("")}</div>`;
+}
+
+function renderFleet(units) {
+  const free = units.filter(u => u.active && !u.job && !u.queue.length).length;
+  document.getElementById("fleet-hint").textContent = `${free} de ${units.filter(u => u.active).length} libres`;
+  const el = document.getElementById("fleet");
+  el.innerHTML = units.map(u => {
+    let cls = "", pos = 0, tag, line1, line2, ends;
+    if (!u.active) {
+      cls = "off"; tag = `<span class="tag t-off">Fuera de servicio</span>`;
+      line1 = "No recibe servicios"; line2 = ""; ends = [`Base ${u.base_zone}`, ""];
+    } else if (!u.job && u.queue.length) {
+      const q = u.queue[0];
+      tag = `<span class="tag t-queue">Servicio en cola</span>`;
+      line1 = `${esc(q.case_number)} · ${esc(q.service_type)} ${esc(q.vehicle_type)}`;
+      line2 = `Sale en ${q.starts_in} s`; ends = [`Base ${u.base_zone}`, esc(q.address)];
+    } else if (!u.job) {
+      tag = `<span class="tag t-free">Libre</span>`;
+      line1 = `En base ${u.base_zone}`; line2 = `${u.jobs_today} servicio${u.jobs_today === 1 ? "" : "s"} hoy`;
+      ends = [`Base ${u.base_zone}`, ""];
+    } else {
+      const j = u.job;
+      pos = Math.min(1, j.progress / j.travel_share);
+      cls = j.state === "en_servicio" ? "working-svc" : "";
+      tag = `<span class="tag ${j.state === "en_camino" ? "t-road" : "t-svc"}">${esc(j.label)}</span>`;
+      line1 = `${esc(j.case_number)} · ${esc(j.service_type)} ${esc(j.vehicle_type)}`;
+      line2 = `Termina en ${j.seconds_left} s`;
+      ends = [`Base ${u.base_zone}`, esc(j.address)];
+    }
+    return `<div class="unit ${cls}">
+      <div class="id"><b>${esc(u.code)}</b><span>${esc(u.driver)} · ${esc(u.type_label)}</span></div>
+      <div class="road" aria-hidden="true"><div class="bar"></div><div class="fill" style="width:${(pos * 100).toFixed(1)}%"></div>
+        <div class="truck" style="left:${(pos * 100).toFixed(1)}%">${TRUCK}</div>
+        <div class="ends"><span>${ends[0]}</span><span>${ends[1]}</span></div></div>
+      <div class="status">${tag}<b>${line1}</b><span>${line2}</span>${queueHtml(u)}
+        <button class="unit-toggle" data-unit="${u.id}" data-active="${u.active}">${u.active ? "Marcar fuera de servicio" : "Volver a poner en servicio"}</button></div>
+    </div>`;
+  }).join("") || `<div class="empty">No hay grúas. Ejecuta <code>python -m scripts.seed</code>.</div>`;
+}
+
+const KIND_TITLE = { accepted: "Aceptado", rejected: "Descartado", waiting: "Flota saturada", lost: "Perdido",
+                     failed: "No se pudo aceptar", error: "Error", config: "Cambio de configuración", info: "Bot" };
+function renderFeed(events) {
+  const el = document.getElementById("feed");
+  const newest = events.length ? events[0].id : 0;
+  el.innerHTML = events.map(e => {
+    const svc = e.case_number ? `<div class="ev-sub">${esc(e.case_number)} · ${esc(e.service_type)} ${esc(e.vehicle_type)} · ${esc(e.zone)} · ${eur2.format(e.amount_eur)}</div>` : "";
+    const fresh = lastEventId && e.id > lastEventId ? " fresh" : "";
+    return `<li class="${esc(e.kind)}${fresh}"><div class="ev-top"><b>${KIND_TITLE[e.kind] || esc(e.kind)}</b><span class="ev-time">${hhmmss(e.created_at)}</span></div>
+      <div>${esc(e.message)}</div>${svc}</li>`;
+  }).join("") || `<li class="empty">Todavía no hay actividad. Arranca el bot para verlo trabajar.</li>`;
+  lastEventId = Math.max(lastEventId, newest);
+}
+
+function renderRules(st) {
+  const editing = document.activeElement && document.activeElement.closest("#rules");
+  const sig = JSON.stringify(st.rules);
+  if (editing || sig === rulesSig) return;
+  rulesSig = sig;
+  document.getElementById("rules").innerHTML = st.rules.map(r => `
+    <div class="rule ${r.active ? "" : "inactive"}" data-id="${r.id}">
+      <button class="switch" role="switch" aria-checked="${r.active}" aria-label="Activar regla ${esc(r.name)}" data-act="toggle"></button>
+      <span class="rname">${esc(r.name)}</span>
+      <form class="sentence" data-act="save"><span>${esc(r.field_label)} ${esc(r.operator_label)}</span>
+        <input name="value" value="${esc(r.value)}" aria-label="Valor de ${esc(r.name)}"><button class="btn btn-ghost" type="submit">Guardar</button></form>
+      <div class="ract"><button class="btn btn-danger" data-act="delete">Eliminar</button></div>
+    </div>`).join("") || `<div class="empty">Sin reglas: el bot acepta cualquier servicio si tiene grúa libre.</div>`;
+
+  const form = document.getElementById("newrule");
+  if (!form.field.options.length) {
+    form.field.innerHTML = Object.entries(st.fields).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("");
+    form.operator.innerHTML = Object.entries(st.operators).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("");
+  }
+}
+
+const RESULT = { accepted: "Aceptado", rejected: "Descartado", waiting: "Esperando grúa", lost: "Perdido: flota saturada",
+                 failed: "No se pudo aceptar", new: "Evaluando" };
+function renderServices(rows) {
+  document.getElementById("services").innerHTML = rows.map(r => {
+    const resp = r.response_seconds != null ? ` en ${r.response_seconds.toFixed(1).replace(".", ",")} s` : "";
+    const why = r.status === "accepted" ? `${esc(r.unit_code)} (${esc(r.driver)})${resp}` : esc((r.reason || "").replace(/^No cumple: /, "Regla: "));
+    return `<tr><td class="num">${esc(r.case_number)}</td><td>${esc(r.service_type)} ${esc(r.vehicle_type)}</td><td>${esc(r.zone)}</td>
+      <td class="num">${r.distance_km.toFixed(1).replace(".", ",")}</td><td class="num">${eur2.format(r.amount_eur)}</td><td>${esc(r.insurer)}</td>
+      <td><span class="res ${esc(r.status)}">${RESULT[r.status] || esc(r.status)}</span></td><td class="why">${why}</td></tr>`;
+  }).join("") || `<tr><td colspan="8" class="empty">El bot todavía no ha visto servicios hoy.</td></tr>`;
+}
+
+function say(text, ok) { const m = document.getElementById("rules-msg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); }
+
+async function refresh() {
+  try {
+    state = await api("/api/state");
+    renderBot(state.bot); renderStats(state.stats); renderFleet(state.units); renderFeed(state.events); renderServices(state.services); renderRules(state);
+    const qw = document.getElementById("qwait-s");
+    if (document.activeElement !== qw) qw.value = Math.round(state.max_queue_wait);
+  } catch (e) {
+    document.getElementById("bot-text").textContent = "Sin conexión con el panel";
+  }
+}
+
+document.getElementById("pause-btn").addEventListener("click", async () => {
+  await api("/api/bot/pause", { method: "POST", body: JSON.stringify({ paused: !state.bot.paused }) }); refresh();
+});
+document.getElementById("fleet").addEventListener("click", async e => {
+  const b = e.target.closest(".unit-toggle"); if (!b) return;
+  await api(`/api/units/${b.dataset.unit}`, { method: "PATCH", body: JSON.stringify({ active: b.dataset.active !== "true" }) }); refresh();
+});
+document.getElementById("rules").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.dataset.act === "save") return;
+  const row = b.closest(".rule"), id = row.dataset.id;
+  try {
+    if (b.dataset.act === "toggle") await api(`/api/rules/${id}`, { method: "PATCH", body: JSON.stringify({ active: b.getAttribute("aria-checked") !== "true" }) });
+    if (b.dataset.act === "delete") { await api(`/api/rules/${id}`, { method: "DELETE" }); say("Regla eliminada", true); }
+    b.blur(); rulesSig = ""; refresh();
+  } catch (err) { say(err.message, false); }
+});
+document.getElementById("rules").addEventListener("submit", async e => {
+  e.preventDefault();
+  const row = e.target.closest(".rule");
+  try {
+    await api(`/api/rules/${row.dataset.id}`, { method: "PATCH", body: JSON.stringify({ value: e.target.value.value }) });
+    say("Regla guardada", true); document.activeElement.blur(); rulesSig = ""; refresh();
+  } catch (err) { say(err.message, false); }
+});
+document.getElementById("qwait").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    await api("/api/settings/max-queue-wait", { method: "POST", body: JSON.stringify({ seconds: parseInt(e.target.seconds.value, 10) }) });
+    say("Espera máxima guardada", true); document.activeElement.blur(); refresh();
+  } catch (err) { say(err.message, false); }
+});
+document.getElementById("newrule").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    await api("/api/rules", { method: "POST", body: JSON.stringify({ name: f.name.value, field: f.field.value, operator: f.operator.value, value: f.value.value }) });
+    f.name.value = ""; f.value.value = ""; say("Regla añadida", true); rulesSig = ""; refresh();
+  } catch (err) { say(err.message, false); }
+});
+
+refresh();
+setInterval(refresh, 1500);
+</script>
+</body>
+</html>

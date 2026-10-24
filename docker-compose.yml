@@ -1,0 +1,38 @@
+services:
+  portal:
+    build: ./portal
+    ports:
+      - "8000:8000"
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      PORTAL_URL: http://portal:8000
+      DB_PATH: /app/data/gruas.db
+      BROWSER_CHANNEL: ""
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      portal:
+        condition: service_healthy
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    command: ["sh", "-c", "python -m scripts.seed && uvicorn dashboard.app:app --host 0.0.0.0 --port 8001"]
+    ports:
+      - "8001:8001"
+    env_file: .env
+    environment:
+      DB_PATH: /app/data/gruas.db
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - bot

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block nav %}<span class="muted" style="color:#cbd2d9;margin-right:16px;">Empresa: {{ company }}</span><a href="/logout" data-testid="logout">Cerrar sesión</a>{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Servicios disponibles ({{ pending|length }})</h2>
+  <p class="muted" style="margin-top:-6px;">El primer proveedor que acepta y asigna recurso se queda el servicio. Si nadie lo acepta a tiempo, pasa a otra empresa.</p>
+  <table data-testid="services-table">
+    <thead>
+      <tr><th>Expediente</th><th>Aseguradora</th><th>Servicio</th><th>Vehículo</th><th>Ubicación</th><th>Destino</th><th>Km</th><th>Importe</th><th>Caduca</th><th>Aceptar con recurso</th></tr>
+    </thead>
+    <tbody>
+    {% for s in pending %}
+      <tr data-testid="service-row" data-service-id="{{ s.id }}" data-published-at="{{ s.published_at }}">
+        <td><span data-field="case_number">{{ s.case_number }}</span></td>
+        <td data-field="insurer">{{ s.insurer }}</td>
+        <td><strong data-field="service_type">{{ s.service_type }}</strong></td>
+        <td><span data-field="vehicle_type">{{ s.vehicle_type }}</span><span class="sub"><span data-field="vehicle_model">{{ s.vehicle_model }}</span> · <span data-field="plate">{{ s.plate }}</span></span></td>
+        <td class="wrap"><span data-field="address">{{ s.address }}</span><span class="sub">Zona <span data-field="zone">{{ s.zone }}</span></span></td>
+        <td class="wrap" data-field="destination">{{ s.destination }}</td>
+        <td data-field="distance_km">{{ "%.1f"|format(s.distance_km) }}</td>
+        <td data-field="amount_eur">{{ "%.2f"|format(s.amount_eur) }}</td>
+        <td><span class="timer" data-expires="{{ s.expires_at }}">{{ s.seconds_left }} s</span></td>
+        <td>
+          <form class="accept-form" method="post" action="/servicios/{{ s.id }}/aceptar">
+            <input name="recurso" placeholder="Grúa" required data-testid="resource-{{ s.id }}">
+            <button type="submit" data-testid="accept-{{ s.id }}">Aceptar</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="10" class="muted">No hay servicios disponibles ahora mismo.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="card">
+  <h2>Historial reciente</h2>
+  <table>
+    <thead><tr><th>Expediente</th><th>Servicio</th><th>Zona</th><th>Importe</th><th>Estado</th><th>Recurso</th></tr></thead>
+    <tbody>
+    {% for s in closed %}
+      <tr data-testid="closed-row"><td>{{ s.case_number }}</td><td>{{ s.service_type }}</td><td>{{ s.zone }}</td><td>{{ "%.2f"|format(s.amount_eur) }} €</td>
+        <td><span class="pill {{ s.status }}">{{ "Aceptado" if s.status == "aceptado" else "Perdido" }}</span></td><td>{{ s.resource }}</td></tr>
+    {% else %}
+      <tr><td colspan="6" class="muted">Todavía no hay servicios cerrados.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+  // Live countdown; reload periodically unless the user is typing a resource.
+  function tick() {
+    const now = Date.now() / 1000;
+    document.querySelectorAll(".timer").forEach(el => {
+      const left = Math.max(0, Math.round(parseFloat(el.dataset.expires) - now));
+      el.textContent = left + " s";
+      el.classList.toggle("low", left <= 10);
+    });
+  }
+  setInterval(tick, 1000); tick();
+  setInterval(() => {
+    if (navigator.webdriver) return;  // automated browser (the bot) navigates by itself
+    const typing = document.activeElement && document.activeElement.name === "recurso" && document.activeElement.value;
+    if (!typing) location.reload();
+  }, 5000);
+</script>
+{% endblock %}

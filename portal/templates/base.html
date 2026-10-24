@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Plataforma de Asistencia (DEMO){% endblock %}</title>
+  <style>
+    :root { --bg:#f4f5f7; --card:#fff; --ink:#1f2933; --muted:#616e7c; --line:#e4e7eb; --accent:#2f6fde; --ok:#1f9d55; --warn:#d97706; --bad:#c81e1e; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:#1f2933; color:#fff; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; }
+    header a { color:#cbd2d9; text-decoration:none; font-size:14px; }
+    .tag { font-size:11px; background:#f0b429; color:#1f2933; padding:2px 6px; border-radius:4px; margin-left:8px; }
+    main { max-width:1360px; margin:24px auto; padding:0 16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:20px; overflow-x:auto; }
+    h2 { margin:0 0 12px; font-size:18px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { text-align:left; padding:8px 7px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    th { color:var(--muted); font-weight:600; }
+    button { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:6px 12px; cursor:pointer; }
+    input { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; margin:4px 0 12px; }
+    .prio-Alta { color:var(--bad); font-weight:600; } .prio-Media { color:var(--warn); } .prio-Baja { color:var(--muted); }
+    .error { color:var(--bad); margin-bottom:12px; }
+    .muted { color:var(--muted); font-size:13px; }
+    .sub { display:block; color:var(--muted); font-size:12px; }
+    td.wrap { white-space:normal; min-width:130px; }
+    .accept-form { display:flex; gap:6px; }
+    .accept-form input { width:92px; margin:0; padding:6px 8px; }
+    .timer { font-variant-numeric:tabular-nums; font-weight:600; }
+    .timer.low { color:var(--bad); }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+    .pill.aceptado { background:#e3f9e5; color:#1f6f43; } .pill.perdido { background:#fde8e8; color:#9b1c1c; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Plataforma de Asistencia en Carretera<span class="tag">DEMO · datos ficticios</span></strong>
+    {% block nav %}{% endblock %}
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

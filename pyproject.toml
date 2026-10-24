@@ -1,0 +1,13 @@
+[project]
+name = "rpa-task-bot"
+version = "0.1.0"
+description = "Demo de bot RPA: extrae órdenes de un portal web, aplica reglas desde SQLite y avisa por Telegram."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
