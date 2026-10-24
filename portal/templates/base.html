@@ -35,7 +35,7 @@
 <body>
   <header>
     <strong>Plataforma de Asistencia en Carretera<span class="tag">DEMO · datos ficticios</span></strong>
-    {% block nav %}{% endblock %}
+    <nav>{% if panel_url %}<a href="{{ panel_url }}" target="_blank" rel="noopener" style="margin-right:16px;color:#f0b429;">Ver el panel del bot</a>{% endif %}{% block nav %}{% endblock %}</nav>
   </header>
   <main>{% block content %}{% endblock %}</main>
 </body>

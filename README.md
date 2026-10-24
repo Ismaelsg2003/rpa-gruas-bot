@@ -83,8 +83,8 @@ Las reglas viven en la base de datos y se editan desde el panel. Un servicio se 
 - **FastAPI + Jinja2** para la plataforma ficticia; **FastAPI + HTML/JS** sin frameworks para el panel
 - **pydantic-settings** para la configuración desde `.env`
 - **Telegram Bot API** para los avisos
-- **pytest** (43 tests: reglas, asignación y colas de la flota, base de datos y migraciones)
-- **Docker Compose** para levantar las tres piezas
+- **pytest** (44 tests: reglas, asignación y colas de la flota, base de datos y migraciones)
+- **Docker Compose** para levantar las tres piezas y **Caddy** como proxy con HTTPS en producción
 
 ## Cómo ejecutarlo
 
@@ -117,6 +117,10 @@ cp .env.example .env
 docker compose up --build
 ```
 
+### En un servidor público
+
+La guía [DEPLOY.md](DEPLOY.md) explica cómo publicarlo en un servidor Linux gratuito (Oracle Cloud Always Free) con Docker Compose, HTTPS automático con Caddy y modo demo pública, que restablece la demo cada hora porque todos los visitantes la comparten.
+
 ### Tests
 
 ```bash
@@ -142,13 +146,16 @@ Sin esos valores, el bot funciona igual y muestra los avisos en el log.
 │   ├── fleet.py          # Asignación de grúas, colas y ciclo de vida del servicio
 │   ├── db.py             # SQLite: reglas, flota, servicios, trabajos, eventos
 │   ├── notifier.py       # Telegram
+│   ├── demo.py           # Flota y reglas de ejemplo, reinicio de la demo pública
 │   ├── models.py         # Modelos de dominio
 │   └── config.py         # Configuración desde .env
 ├── dashboard/            # Panel de control (API FastAPI + página estática)
 ├── scripts/seed.py       # Carga flota y reglas de ejemplo
 ├── tests/
 ├── run_demo.py           # Arranca todo con un comando
-├── Dockerfile · portal/Dockerfile · docker-compose.yml
+├── Dockerfile · portal/Dockerfile · docker-compose.yml · docker-compose.prod.yml
+├── deploy/Caddyfile      # Proxy HTTPS para el despliegue público
+├── DEPLOY.md             # Guía de despliegue en servidor
 └── docs/                 # Capturas
 ```
 

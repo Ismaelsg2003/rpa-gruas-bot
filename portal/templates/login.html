@@ -12,5 +12,6 @@
     <button type="submit" data-testid="login-submit">Entrar</button>
   </form>
   <p class="muted">Plataforma ficticia para la demo del bot RPA.</p>
+  {% if demo_credentials %}<p class="muted" data-testid="demo-credentials">Acceso de la demo: usuario <strong>{{ demo_credentials[0] }}</strong>, contraseña <strong>{{ demo_credentials[1] }}</strong></p>{% endif %}
 </div>
 {% endblock %}

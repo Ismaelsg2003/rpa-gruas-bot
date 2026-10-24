@@ -115,6 +115,10 @@ class Database:
         with self._conn:
             yield self._conn
 
+    def execute_script(self, sql: str) -> None:
+        """Run several maintenance statements atomically."""
+        self._conn.executescript("BEGIN; " + sql + " COMMIT;")
+
     # ---- rules -----------------------------------------------------------
     @staticmethod
     def _rule(row: sqlite3.Row) -> Rule:

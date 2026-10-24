@@ -26,6 +26,14 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
+    # Public demo: every visitor shares the panel, so the bot restores the initial
+    # fleet, rules and an empty history every `demo_reset_minutes`.
+    demo_public: bool = False
+    demo_reset_minutes: int = 60
+    # Public addresses, used only to link the panel and the platform to each other.
+    panel_public_url: str = ""
+    platform_public_url: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

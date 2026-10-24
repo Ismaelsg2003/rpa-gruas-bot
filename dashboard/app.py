@@ -21,12 +21,14 @@ from pydantic import BaseModel, Field
 
 from bot.config import get_settings
 from bot.db import Database
+from bot.demo import seconds_until_reset
 from bot.fleet import DEFAULT_MAX_QUEUE_WAIT_S, job_progress
 from bot.models import RULE_FIELDS, UNIT_TYPE_LABELS, Operator
 from bot.rules import RuleError
 
 STATIC = Path(__file__).parent / "static"
 BOT_OFFLINE_AFTER_S = 20
+MAX_RULES_PUBLIC_DEMO = 12
 
 OPERATOR_LABELS = {
     Operator.IN: "es uno de",
@@ -81,6 +83,7 @@ def index() -> FileResponse:
 
 @app.get("/api/state")
 def state(db: Database = Depends(get_db)) -> dict[str, Any]:
+    settings = get_settings()
     now = time.time()
     heartbeat = float(db.get_setting("bot_heartbeat", "0") or 0)
     jobs = [j for j in db.recent_jobs(now - 3600) if j.finishes_at > now]
@@ -129,6 +132,12 @@ def state(db: Database = Depends(get_db)) -> dict[str, Any]:
         "now": now,
         "bot": {"online": now - heartbeat < BOT_OFFLINE_AFTER_S, "paused": db.is_paused()},
         "max_queue_wait": db.max_queue_wait(DEFAULT_MAX_QUEUE_WAIT_S),
+        "demo": {
+            "public": settings.demo_public,
+            "reset_minutes": settings.demo_reset_minutes,
+            "reset_in": int(seconds_until_reset(db, settings.demo_reset_minutes, now)) if settings.demo_public else None,
+            "platform_url": settings.platform_public_url,
+        },
         "stats": db.stats_today(),
         "units": units,
         "events": db.recent_events(40),
@@ -153,6 +162,8 @@ def state(db: Database = Depends(get_db)) -> dict[str, Any]:
 
 @app.post("/api/rules", status_code=201)
 def create_rule(body: RuleIn, db: Database = Depends(get_db)) -> dict[str, int]:
+    if get_settings().demo_public and len(db.list_rules()) >= MAX_RULES_PUBLIC_DEMO:
+        raise HTTPException(400, f"En la demo pública hay un máximo de {MAX_RULES_PUBLIC_DEMO} reglas. Elimina alguna antes.")
     try:
         rule_id = db.add_rule(body.name, body.field, body.operator, body.value)
     except sqlite3.IntegrityError:

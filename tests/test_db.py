@@ -117,3 +117,21 @@ def test_services_today_shows_outcome_unit_and_reason(db: Database) -> None:
     rejected, accepted = db.services_today()  # newest first
     assert (rejected["status"], rejected["reason"], rejected["unit_code"]) == ("rejected", "No cumple: Importe mínimo", None)
     assert (accepted["status"], accepted["unit_code"]) == ("accepted", "G-01")
+
+
+def test_public_demo_reset_restores_initial_state(db: Database) -> None:
+    from bot.demo import FLEET, RULES, reset_demo, seconds_until_reset, seed
+
+    seed(db)
+    rule_id = db.list_rules()[0].id
+    db.update_rule(rule_id, active=False)
+    db.add_rule("Regla de un visitante", "zone", "in", "Norte")
+    db.set_unit_active(db.list_units()[0].id, False)
+    db.record_service(make_service(id=1))
+    db.set_setting("bot_paused", "1")
+
+    reset_demo(db)
+    assert len(db.list_units()) == len(FLEET) and all(u.active for u in db.list_units())
+    assert [r.name for r in db.list_rules()] == [r[0] for r in RULES] and all(r.active for r in db.list_rules())
+    assert db.service_status(1) is None and not db.is_paused()
+    assert 0 < seconds_until_reset(db, every_minutes=60) <= 3600

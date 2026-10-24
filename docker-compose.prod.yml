@@ -1,0 +1,68 @@
+# Despliegue público (servidor): docker compose -f docker-compose.prod.yml up -d --build
+# Solo Caddy expone puertos (80/443); el resto de servicios quedan en la red interna.
+services:
+  portal:
+    build: ./portal
+    env_file: .env
+    environment:
+      DEMO_PUBLIC: "true"
+      PANEL_PUBLIC_URL: https://${PANEL_HOST}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      PORTAL_URL: http://portal:8000
+      DB_PATH: /app/data/gruas.db
+      BROWSER_CHANNEL: ""
+      HEADLESS: "true"
+      DEMO_PUBLIC: "true"
+    volumes:
+      - ./data:/app/data
+    ipc: host   # recomendado por Playwright para que Chromium no se quede sin memoria compartida
+    init: true
+    depends_on:
+      portal:
+        condition: service_healthy
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    command: ["sh", "-c", "python -m scripts.seed && uvicorn dashboard.app:app --host 0.0.0.0 --port 8001 --proxy-headers"]
+    env_file: .env
+    environment:
+      DB_PATH: /app/data/gruas.db
+      DEMO_PUBLIC: "true"
+      PLATFORM_PUBLIC_URL: https://${PLATFORM_HOST}
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - bot
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.10-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PANEL_HOST: ${PANEL_HOST}
+      PLATFORM_HOST: ${PLATFORM_HOST}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - dashboard
+      - portal
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

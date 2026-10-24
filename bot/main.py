@@ -13,6 +13,7 @@ import time
 
 from bot.config import get_settings
 from bot.db import Database
+from bot.demo import reset_demo, seconds_until_reset
 from bot.fleet import DEFAULT_MAX_QUEUE_WAIT_S, choose_unit, plan_job
 from bot.models import Service
 from bot.notifier import Notifier
@@ -144,6 +145,12 @@ def main() -> None:
         db.add_event("info", "Bot iniciado y conectado a la plataforma")
         was_paused = False
         while not _stop:
+            if settings.demo_public and seconds_until_reset(db, settings.demo_reset_minutes) == 0:
+                reset_demo(db)
+                db.add_event("info", f"Demo pública restablecida: flota, reglas e historial iniciales "
+                                     f"(se repite cada {settings.demo_reset_minutes} min)")
+                log.info("Demo pública restablecida")
+                was_paused = False
             db.set_setting("bot_heartbeat", str(time.time()))
             paused = db.is_paused()
             if paused != was_paused:

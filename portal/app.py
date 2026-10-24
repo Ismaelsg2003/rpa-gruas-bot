@@ -30,6 +30,8 @@ SESSION_SECRET = os.getenv("PORTAL_SESSION_SECRET") or secrets.token_hex(32)
 NEW_SERVICE_EVERY = float(os.getenv("PORTAL_NEW_SERVICE_EVERY", "7"))
 SERVICE_TTL = float(os.getenv("PORTAL_SERVICE_TTL", "45"))
 MAX_PENDING = int(os.getenv("PORTAL_MAX_PENDING", "12"))
+DEMO_PUBLIC = os.getenv("DEMO_PUBLIC", "false").lower() in ("1", "true", "yes")
+PANEL_PUBLIC_URL = os.getenv("PANEL_PUBLIC_URL", "")
 
 SERVICE_TYPES = {  # type: (weight, base price €)
     "Arrastre": (5, 70.0),
@@ -162,6 +164,10 @@ class ServiceStore:
 app = FastAPI(title="Plataforma de Asistencia (DEMO)")
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.globals.update(
+    panel_url=PANEL_PUBLIC_URL,
+    demo_credentials=(PORTAL_USER, PORTAL_PASSWORD) if DEMO_PUBLIC else None,
+)
 store = ServiceStore()
 
 

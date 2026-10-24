@@ -51,6 +51,9 @@
   .btn { border: 0; border-radius: var(--radius); padding: 8px 14px; font-weight: 600; cursor: pointer; }
   .btn-hivis { background: var(--hivis); color: var(--hivis-ink); }
   .btn-ghost { background: transparent; border: 1px solid var(--line); }
+  .btn-outline { color: var(--asphalt-ink); border: 1px solid #6B7177; text-decoration: none; }
+  .btn-outline:hover { border-color: var(--hivis); }
+  .demo-note { margin: -6px 0 0; color: #C9CDD1; font-size: 14px; }
   .btn-danger { background: transparent; color: var(--stop); border: 1px solid transparent; padding: 6px 8px; }
   .btn-danger:hover { border-color: var(--stop); }
 
@@ -171,8 +174,10 @@
       <div class="botctl">
         <div class="botstate" role="status" aria-live="polite"><span class="dot" id="bot-dot"></span><span id="bot-text">Conectando…</span></div>
         <button class="btn btn-hivis" id="pause-btn" hidden>Pausar bot</button>
+        <a class="btn btn-outline" id="platform-link" hidden target="_blank" rel="noopener">Abrir la plataforma</a>
       </div>
     </div>
+    <p class="demo-note" id="demo-note" hidden></p>
     <div class="board" aria-label="Resumen de hoy">
       <div class="hl"><b id="k-accepted">0</b><span>servicios aceptados hoy</span></div>
       <div><b id="k-revenue">0 €</b><span>facturación aceptada</span></div>
@@ -247,6 +252,16 @@ function renderBot(bot) {
   text.textContent = !bot.online ? "Bot desconectado" : bot.paused ? "Bot en pausa: no acepta servicios" : "Bot activo, vigilando la plataforma";
   btn.hidden = false;
   btn.textContent = bot.paused ? "Reanudar bot" : "Pausar bot";
+}
+
+function renderDemo(d) {
+  const link = document.getElementById("platform-link");
+  if (d.platform_url) { link.href = d.platform_url; link.hidden = false; }
+  const note = document.getElementById("demo-note");
+  if (!d.public) { note.hidden = true; return; }
+  const mins = Math.max(1, Math.ceil(d.reset_in / 60));
+  note.hidden = false;
+  note.textContent = `Demo pública compartida: puedes pausar el bot, cambiar reglas o retirar grúas. Todo vuelve a su estado inicial cada ${d.reset_minutes} min (próximo reinicio en ${mins} min).`;
 }
 
 function renderStats(s) {
@@ -353,7 +368,7 @@ function say(text, ok) { const m = document.getElementById("rules-msg"); m.textC
 async function refresh() {
   try {
     state = await api("/api/state");
-    renderBot(state.bot); renderStats(state.stats); renderFleet(state.units); renderFeed(state.events); renderServices(state.services); renderRules(state);
+    renderBot(state.bot); renderDemo(state.demo); renderStats(state.stats); renderFleet(state.units); renderFeed(state.events); renderServices(state.services); renderRules(state);
     const qw = document.getElementById("qwait-s");
     if (document.activeElement !== qw) qw.value = Math.round(state.max_queue_wait);
   } catch (e) {

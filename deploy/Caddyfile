@@ -1,0 +1,10 @@
+# Caddy obtiene y renueva solo los certificados HTTPS (Let's Encrypt).
+{$PANEL_HOST} {
+	encode gzip
+	reverse_proxy dashboard:8001
+}
+
+{$PLATFORM_HOST} {
+	encode gzip
+	reverse_proxy portal:8000
+}

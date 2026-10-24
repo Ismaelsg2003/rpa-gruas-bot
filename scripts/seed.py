@@ -7,27 +7,11 @@
 from __future__ import annotations
 
 import argparse
-import sqlite3
 
 from bot.config import get_settings
 from bot.db import Database
-from bot.models import UNIT_TYPE_LABELS, UnitType
-
-# Fictional fleet.
-FLEET: list[tuple[str, str, UnitType, str]] = [
-    ("G-01", "Antonio", UnitType.LIGHT_TOW, "Centro"),
-    ("G-02", "Lucía", UnitType.LIGHT_TOW, "Norte"),
-    ("G-03", "Manuel", UnitType.HEAVY_TOW, "Sur"),
-    ("A-04", "Carmen", UnitType.ASSIST, "Este"),
-    ("A-05", "Javier", UnitType.ASSIST, "Oeste"),
-]
-
-RULES: list[tuple[str, str, str, str]] = [
-    ("Aseguradoras con convenio", "insurer", "in", "Aseguradora Alfa,Seguros Beta,Mutua Gamma"),
-    ("Importe mínimo", "amount_eur", "gte", "55"),
-    ("Distancia máxima", "distance_km", "lte", "50"),
-    ("No hacemos aperturas", "service_type", "ne", "Apertura"),
-]
+from bot.demo import seed, wipe_history
+from bot.models import UNIT_TYPE_LABELS
 
 
 def main() -> None:
@@ -37,20 +21,10 @@ def main() -> None:
 
     db = Database(get_settings().db_path)
     if args.reset:
-        with db._tx() as c:  # noqa: SLF001 - maintenance script
-            c.executescript("DELETE FROM jobs; DELETE FROM events; DELETE FROM services; DELETE FROM settings;")
+        wipe_history(db)
+        db.set_setting("bot_paused", "0")
         print("Historial borrado")
-
-    for code, driver, unit_type, zone in FLEET:
-        try:
-            db.add_unit(code, driver, unit_type, zone)
-        except sqlite3.IntegrityError:
-            pass
-    for name, field, op, value in RULES:
-        try:
-            db.add_rule(name, field, op, value)
-        except sqlite3.IntegrityError:
-            pass
+    seed(db)
 
     print("Flota:")
     for u in db.list_units():
