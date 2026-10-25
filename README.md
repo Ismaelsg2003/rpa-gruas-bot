@@ -4,7 +4,9 @@ Simulador completo de cómo una empresa de grúas automatiza la captación de se
 
 Es una versión genérica y pública de un sistema que desarrollé en producción para una empresa de grúas que trabajaba 24/7. No contiene código ni datos de ningún cliente: la plataforma, las aseguradoras, los conductores y los servicios son ficticios.
 
-![Panel de control](docs/panel-control.png)
+![Demo: el bot acepta servicios y asigna grúas en directo](docs/demo.gif)
+
+▶️ [Vídeo completo de la demo (70 s)](docs/demo.mp4): aceptación automática, colas cuando faltan grúas y cambio de reglas desde el panel.
 
 ## El problema
 
@@ -22,7 +24,9 @@ Este proyecto automatiza ese trabajo de principio a fin:
 
 ## Cómo funciona
 
-![Plataforma de asistencia ficticia](docs/plataforma.png)
+| Panel de control | Plataforma de asistencia (ficticia) |
+|---|---|
+| ![Panel de control](docs/panel-control.png) | ![Plataforma de asistencia ficticia](docs/plataforma.png) |
 
 El sistema tiene tres piezas:
 
@@ -156,7 +160,8 @@ Sin esos valores, el bot funciona igual y muestra los avisos en el log.
 ├── Dockerfile · portal/Dockerfile · docker-compose.yml · docker-compose.prod.yml
 ├── deploy/Caddyfile      # Proxy HTTPS para el despliegue público
 ├── DEPLOY.md             # Guía de despliegue en servidor
-└── docs/                 # Capturas
+├── tools/demo-video/     # Script para grabar el vídeo y el GIF de la demo
+└── docs/                 # Capturas, GIF y vídeo
 ```
 
 ## Notas

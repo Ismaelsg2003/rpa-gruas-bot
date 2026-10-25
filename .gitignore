@@ -5,4 +5,7 @@ __pycache__/
 .ruff_cache/
 .env
 data/*.db
+data/*.db-wal
+data/*.db-shm
 .vscode/
+docs/video-raw/

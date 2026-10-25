@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #24282C; font-family: "Barlow", system-ui, sans-serif; }
+  .top { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; color: #F1F2EE; border-bottom: 5px solid #F5B800; box-sizing: border-box; }
+  .top b { font: 700 30px "Barlow Condensed", sans-serif; }
+  .top span { color: #B9BEC2; font-size: 18px; }
+  .panes { display: flex; gap: 12px; padding: 10px 12px 0; height: 900px; box-sizing: border-box; }
+  .pane { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-radius: 8px; background: #1C1F22; }
+  .frame { flex: 1; overflow: hidden; background: #fff; }
+  .label { flex: none; height: 38px; display: flex; align-items: center; padding: 0 14px; color: #F5B800; font-weight: 600; font-size: 20px; }
+  iframe { border: 0; width: 1280px; height: 1200px; transform: scale(.7375); transform-origin: 0 0; }
+  .cap { height: 116px; display: flex; align-items: center; gap: 18px; padding: 0 32px; color: #fff; font-size: 31px; font-weight: 600; line-height: 1.25; }
+  .cap .n { flex: none; width: 52px; height: 52px; border-radius: 50%; background: #F5B800; color: #1C1F22; display: grid; place-items: center; font: 700 30px "Barlow Condensed", sans-serif; }
+  .cap.fade { animation: f .5s ease-out; }
+  @keyframes f { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+  <div class="top"><b>Bot RPA para empresas de grúas</b><span>Python · Playwright · SQLite · FastAPI · datos ficticios</span></div>
+  <div class="panes">
+    <div class="pane"><div class="label">Panel del gerente</div><div class="frame"><iframe id="panel" src="http://localhost:8001/"></iframe></div></div>
+    <div class="pane"><div class="label">Plataforma de la aseguradora</div><div class="frame"><iframe id="platform" src="http://localhost:8000/servicios"></iframe></div></div>
+  </div>
+  <div class="cap" id="cap"><span class="n" id="n">1</span><span id="t"></span></div>
+<script>
+  window.setCaption = (n, text) => {
+    const cap = document.getElementById("cap");
+    document.getElementById("n").textContent = n;
+    document.getElementById("t").textContent = text;
+    cap.classList.remove("fade"); void cap.offsetWidth; cap.classList.add("fade");
+  };
+</script>
+</body>
+</html>
