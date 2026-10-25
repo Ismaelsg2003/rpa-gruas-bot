@@ -8,6 +8,8 @@ Es una versión genérica y pública de un sistema que desarrollé en producció
 
 ▶️ [Vídeo completo de la demo (70 s)](docs/demo.mp4): aceptación automática, colas cuando faltan grúas y cambio de reglas desde el panel.
 
+Forma parte de mi portfolio: [ismael-sanchez.vercel.app](https://ismael-sanchez.vercel.app).
+
 ## El problema
 
 Las aseguradoras publican los servicios de asistencia (arrastres, baterías, pinchazos…) en plataformas web. **Se los queda la primera empresa que los acepta**, y si nadie lo hace a tiempo pasan a otra. Hacerlo a mano exige tener a alguien pegado a la pantalla día y noche, decidir en segundos si el servicio compensa (zona, kilómetros, importe, aseguradora) y averiguar qué grúa está libre y cerca.
@@ -169,3 +171,7 @@ Sin esos valores, el bot funciona igual y muestra los avisos en el log.
 - Los tiempos están comprimidos para la demo: un servicio completo dura segundos, no horas. Se ajustan en `bot/fleet.py`.
 - El panel no tiene login porque es una demo local. En producción iría detrás de autenticación.
 - En un caso real, el bot se despliega en un VPS Linux como servicio (systemd o Docker con `restart: unless-stopped`) para funcionar 24/7.
+
+## Autor
+
+**Ismael Sánchez Gragera**, desarrollador Python. [Portfolio](https://ismael-sanchez.vercel.app) · [LinkedIn](https://www.linkedin.com/in/ismael-sg) · [isanchezg2003@gmail.com](mailto:isanchezg2003@gmail.com)
